@@ -1,0 +1,11 @@
+{
+  "name": "gov_portal_updated_api_images",
+  "version": "1.0.0",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
