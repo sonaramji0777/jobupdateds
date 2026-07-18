@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Executive Control Console Terminal</title>
+    <style>
+        :root { --primary: #fbbf24; --bg: #0b0f19; --card: #111827; --text: #f3f4f6; }
+        * { box-sizing: border-box; margin:0; padding:0; font-family:'Segoe UI', system-ui, sans-serif; }
+        body { background: var(--bg); color: var(--text); padding: 20px; }
+        
+        #authGate { position: fixed; top:0; left:0; width:100%; height:100%; background:#05070f; z-index:9999; display:flex; justify-content:center; align-items:center; }
+        .auth-box { background: var(--card); padding:35px; border-radius:12px; border:1px solid #1f2937; text-align:center; width:90%; max-width:400px; }
+        .auth-box h2 { color: var(--primary); margin-bottom: 20px; font-weight: 800; }
+        .auth-box input { width:100%; padding:12px; margin-bottom:15px; background:#1f2937; border:1px solid #374151; border-radius:6px; color:white; font-size:16px; text-align:center; outline: none; }
+        .auth-box button { background:var(--primary); color:#0b0f19; padding:12px; border:none; border-radius:6px; width:100%; font-weight:bold; cursor:pointer; font-size: 15px; margin-bottom: 10px; }
+        .recovery-btn { background: none; border: none; color: #6b7280; text-decoration: underline; cursor: pointer; font-size: 13px; }
+        .recovery-btn:hover { color: var(--primary); }
+
+        .dashboard-container { max-width: 1300px; margin: 0 auto; display:none; }
+        .nav-tabs { display: flex; gap: 10px; margin-bottom: 25px; border-bottom: 2px solid #1f2937; padding-bottom: 10px; flex-wrap: wrap; }
+        .tab-btn { background: #1f2937; border: 1px solid #374151; color: #9ca3af; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .tab-btn.active { background: var(--primary); color: #0b0f19; border-color: var(--primary); }
+        
+        .tab-content { display: none; grid-template-columns: 1fr; gap: 25px; }
+        @media(min-width: 900px){ .tab-content { grid-template-columns: 420px 1fr; } }
+        .tab-content.active { display: grid; }
+        
+        .panel-box { background: var(--card); border: 1px solid #1f2937; padding: 25px; border-radius: 12px; height: fit-content; }
+        .group { margin-bottom: 14px; }
+        label { display: block; margin-bottom: 5px; font-size: 13px; color: #9ca3af; font-weight: 600; }
+        input, select, textarea { width: 100%; padding: 10px; background: #1f2937; border: 1px solid #374151; border-radius: 6px; color: white; }
+        
+        button.btn-save { width:100%; padding:12px; font-weight:bold; border:none; border-radius:6px; cursor:pointer; background:#10b981; color:white; }
+        button.btn-cancel { width:100%; padding:8px; font-weight:bold; border:none; border-radius:6px; cursor:pointer; background:#4b5563; color:white; margin-top:8px; display:none; }
+        
+        table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; }
+        th, td { padding: 12px; border-bottom: 1px solid #1f2937; }
+        th { background: #1f2937; color: var(--primary); }
+        .action-btn-edit { background: #3b82f6; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer; margin-right:4px;}
+        .action-btn-del { background: #ef4444; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer; }
+    </style>
+</head>
+<body>
+
+    <div id="authGate">
+        <div class="auth-box" id="step1Box">
+            <h2>MASTER ACCESS CONTROL</h2>
+            <input type="password" id="masterPassField" placeholder="Enter Administrative Password Key">
+            <button onclick="submitStep1()">Verify Security Key</button>
+            <button class="recovery-btn" onclick="triggerForgotPassword()">Forgot Password Token?</button>
+        </div>
+        <div class="auth-box" id="step2Box" style="display: none;">
+            <h2>TWO-STEP CONFIRMATION</h2>
+            <p style="font-size: 13px; color:#9ca3af; margin-bottom: 15px;">A security token code has been routed to your registered Gmail.</p>
+            <input type="text" id="otpField" placeholder="Enter 6-Digit OTP Token" maxlength="6">
+            <button onclick="submitStep2()">Complete Authorization</button>
+        </div>
+    </div>
+
+    <div class="dashboard-container" id="controlDashboard">
+        <h1 style="color:var(--primary); text-align:center; margin-bottom:25px; font-weight:900;">⚡ GOV-UPDATES SYSTEM EXECUTIVE PANEL</h1>
+        
+        <div class="nav-tabs">
+            <button class="tab-btn active" onclick="switchView('postsTab', this)">Content Posts</button>
+            <button class="tab-btn" onclick="switchView('bannersTab', this)">Showcase Banners</button>
+            <button class="tab-btn" onclick="switchView('hotSectionTab', this)">Hot Vacancies</button>
+            <button class="tab-btn" style="background:#b91c1c; color:white;" onclick="switchView('securityTab', this)">⚙️ Security Engine</button>
+        </div>
+
+        <div class="tab-content active" id="postsTab">
+            <div class="panel-box">
+                <h3 id="postFormTitle" style="color:white; margin-bottom:15px;">Create Dynamic Post</h3>
+                <form id="postForm" enctype="multipart/form-data">
+                    <input type="hidden" id="postEditId" value=""><div class="group"><label>Category Stream Type</label><select id="postType" name="type" required><option value="Jobs">Job Notification</option><option value="E-Notes">E-Note Asset</option><option value="Books">Premium Exam Book</option></select></div><div class="group"><label>English Title</label><input type="text" id="postTitleEn" name="title_en" required></div><div class="group"><label>Hindi Title (हिन्दी)</label><input type="text" id="postTitleHi" name="title_hi" required></div><div class="group"><label>English Content Description</label><textarea id="postDescEn" name="desc_en" rows="3" required></textarea></div><div class="group"><label>Hindi Content Description (हिन्दी)</label><textarea id="postDescHi" name="desc_hi" rows="3" required></textarea></div><div class="group"><label>Backup Redirect Link Address URL</label><input type="url" id="postTargetLink" name="targetLink"></div>
+                    
+                    <!-- 🌟 CHANGED: Input file selector replaced with direct Image URL Link Input option -->
+                    <div class="group"><label style="color:var(--primary);">Image Link URL (API / External Image Link)</label><input type="url" id="postImageUrl" name="imageUrl" placeholder="https://example.com/image.jpg" required></div>
+                    
+                    <div class="group"><label style="color:var(--primary);">Upload Document File Asset (Direct Core PDF)</label><input type="file" name="postPdf" accept="application/pdf"></div><div class="group"><label>Meta Keywords</label><input type="text" id="postKeywords" name="keywords"></div>
+                    <button type="submit" class="btn-save" id="postSubmitBtn">Inject Dynamic Asset Live</button><button type="button" class="btn-cancel" id="postCancelBtn" onclick="resetPostForm()">Cancel Operation</button>
+                </form>
+            </div>
+            <div class="panel-box" style="overflow-x:auto;"><table><thead><tr><th>Stream</th><th>English Title Info</th><th>Operations</th></tr></thead><tbody id="postsTableRows"></tbody></table></div>
+        </div>
+
+        <div class="tab-content" id="bannersTab">
+            <div class="panel-box">
+                <h3 id="bannerFormTitle" style="color:white; margin-bottom:15px;">Create Showcase Banner Slide</h3>
+                <form id="bannerForm" enctype="multipart/form-data">
+                    <input type="hidden" id="bannerEditId" value=""><div class="group"><label>English Title Banner Header</label><input type="text" id="bTitleEn" name="title_en" required></div><div class="group"><label>Hindi Title Banner Header</label><input type="text" id="bTitleHi" name="title_hi" required></div><div class="group"><label>English Short Description</label><textarea id="bDescEn" name="desc_en" rows="2" required></textarea></div><div class="group"><label>Hindi Short Description</label><textarea id="bDescHi" name="desc_hi" rows="2" required></textarea></div><div class="group"><label>Action Apply Button Redirect Link URL</label><input type="url" id="bTargetLink" name="targetLink" required></div>
+                    
+                    <!-- 🌟 CHANGED: Banner Image upload tool changed to direct API Link Option -->
+                    <div class="group"><label style="color:var(--primary);">Main Slider Background Graphic URL Link</label><input type="url" id="bImageUrl" name="imageUrl" placeholder="https://example.com/banner.jpg" required></div>
+                    
+                    <button type="submit" class="btn-save" id="bannerSubmitBtn">Inject Banner Panel Slide</button><button type="button" class="btn-cancel" id="bannerCancelBtn" onclick="resetBannerForm()">Cancel</button>
+                </form>
+            </div>
+            <div class="panel-box" style="overflow-x:auto;"><table><thead><tr><th>Banner Header Info</th><th>Redirect Action Route</th><th>Operations</th></tr></thead><tbody id="bannersTableRows"></tbody></table></div>
+        </div>
+
+        <div class="tab-content" id="hotSectionTab">
+            <div class="panel-box">
+                <h3 id="hvFormTitle" style="color:white; margin-bottom:15px;">Add Hot Alert Item</h3>
+                <form id="hvForm"><input type="hidden" id="hvEditId" value=""><div class="group"><label>English Alert Text String</label><input type="text" id="hvTextEn" required></div><div class="group"><label>Hindi Alert Text String (हिन्दी)</label><input type="text" id="hvTextHi" required></div><div class="group"><label>Redirect Action Route Link URL</label><input type="url" id="hvTargetLink" required></div><button type="submit" class="btn-save" id="hvSubmitBtn">Inject Live Hot Alert Link</button><button type="button" class="btn-cancel" id="hvCancelBtn" onclick="resetHvForm()">Cancel</button></form>
+            </div>
+            <div class="panel-box" style="overflow-x:auto;"><table><thead><tr><th>Alert Message Info</th><th>Operations</th></tr></thead><tbody id="hvTableRows"></tbody></table></div>
+        </div>
+
+        <div class="tab-content" id="securityTab">
+            <div class="panel-box">
+                <h3 style="color:white; margin-bottom:15px;">Update Administrative Credentials</h3>
+                <div class="group">
+                    <label>New Secure Master Password Key</label>
+                    <input type="password" id="newMasterPasswordField" placeholder="Enter new strong password string">
+                </div>
+                <button class="btn-save" onclick="executePasswordReset()">Overwrite Security Credentials</button>
+            </div>
+            <div class="panel-box">
+                <h4 style="color:var(--primary); margin-bottom: 10px;">Security Protocols Note</h4>
+                <p style="font-size:13px; color:#9ca3af; line-height: 1.6;">Your updated password is automatically encrypted using asymmetric Bcrypt multi-layered hashing methods inside the server datablocks. Decoding it via standard text maps is computationally impossible.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let storePosts = [], storeBanners = [], storeHv = [];
+
+        async function submitStep1() {
+            const pass = document.getElementById('masterPassField').value;
+            const res = await fetch('/api/auth/step1', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ password: pass })
+            });
+            const data = await res.json();
+            if (data.success) {
+                document.getElementById('step1Box').style.display = 'none';
+                document.getElementById('step2Box').style.display = 'block';
+            } else { alert(data.message || "Invalid Key Credentials"); }
+        }
+
+        async function submitStep2() {
+            const code = document.getElementById('otpField').value;
+            const res = await fetch('/api/auth/step2', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ otp: code })
+            });
+            const data = await res.json();
+            if (data.success) {
+                document.getElementById('authGate').style.display = 'none';
+                document.getElementById('controlDashboard').style.display = 'block';
+                syncAllCollections();
+            } else { alert(data.message || "OTP Authentication Interrupted"); }
+        }
+
+        async function triggerForgotPassword() {
+            if(!confirm("Route a temporary recovery access token to the master configuration email?")) return;
+            const res = await fetch('/api/auth/forgot-password', { method: 'POST' });
+            const data = await res.json();
+            if(data.success) alert("System recovery key dispatched successfully to Gmail.");
+        }
+
+        async function executePasswordReset() {
+            const newPass = document.getElementById('newMasterPasswordField').value;
+            if(!newPass) return alert("Fields cannot remain unassigned.");
+            const res = await fetch('/api/auth/reset-password', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ newPassword: newPass })
+            });
+            const data = await res.json();
+            if(data.success) { alert("Master security credential overwritten!"); document.getElementById('newMasterPasswordField').value=""; }
+        }
+
+        function switchView(tabId, btn) {
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            btn.classList.add('active');
+        }
+
+        async function syncAllCollections() {
+            try {
+                const [p, b, h] = await Promise.all([fetch('/api/posts'), fetch('/api/banners'), fetch('/api/hotvacancies')]);
+                storePosts = await p.json(); storeBanners = await b.json(); storeHv = await h.json();
+                renderAllTables();
+            } catch(e) { console.error(e); }
+        }
+
+        function renderAllTables() {
+            document.getElementById('postsTableRows').innerHTML = storePosts.map(item => `<tr><td>${item.type}</td><td><strong>${item.title_en}</strong></td><td><button class="action-btn-edit" onclick="initiateEditPost('${item._id}')">Edit</button><button class="action-btn-del" onclick="deleteTargetItem('/api/posts/', '${item._id}')">Delete</button></td></tr>`).join("");
+            document.getElementById('bannersTableRows').innerHTML = storeBanners.map(item => `<tr><td><strong>${item.title_en}</strong></td><td><a href="${item.targetLink}" target="_blank" style="color:var(--primary);">Open URL</a></td><td><button class="action-btn-edit" onclick="initiateEditBanner('${item._id}')">Edit</button><button class="action-btn-del" onclick="deleteTargetItem('/api/banners/', '${item._id}')">Delete</button></td></tr>`).join("");
+            document.getElementById('hvTableRows').innerHTML = storeHv.map(item => `<tr><td><strong>${item.text_en}</strong></td><td><button class="action-btn-edit" onclick="initiateEditHv('${item._id}')">Edit</button><button class="action-btn-del" onclick="deleteTargetItem('/api/hotvacancies/', '${item._id}')">Delete</button></td></tr>`).join("");
+        }
+
+        document.getElementById('postForm').addEventListener('submit', async (e) => { e.preventDefault(); const id = document.getElementById('postEditId').value; const formData = new FormData(e.target); const res = await fetch(id ? `/api/posts/${id}` : '/api/posts', { method: id ? 'PUT' : 'POST', body: formData }); if(res.ok) { alert("Done!"); resetPostForm(); syncAllCollections(); } });
+        document.getElementById('bannerForm').addEventListener('submit', async (e) => { e.preventDefault(); const id = document.getElementById('bannerEditId').value; const formData = new FormData(e.target); const res = await fetch(id ? `/api/banners/${id}` : '/api/banners', { method: id ? 'PUT' : 'POST', body: formData }); if(res.ok) { alert("Done!"); resetBannerForm(); syncAllCollections(); } });
+        document.getElementById('hvForm').addEventListener('submit', async (e) => { e.preventDefault(); const id = document.getElementById('hvEditId').value; const payload = { text_en: document.getElementById('hvTextEn').value, text_hi: document.getElementById('hvTextHi').value, targetLink: document.getElementById('hvTargetLink').value }; const res = await fetch(id ? `/api/hotvacancies/${id}` : '/api/hotvacancies', { method: id ? 'PUT' : 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) }); if(res.ok) { alert("Done!"); resetHvForm(); syncAllCollections(); } });
+
+        function initiateEditPost(id) { const item = storePosts.find(x => x._id === id); document.getElementById('postEditId').value = item._id; document.getElementById('postType').value = item.type; document.getElementById('postTitleEn').value = item.title_en; document.getElementById('postTitleHi').value = item.title_hi; document.getElementById('postDescEn').value = item.desc_en; document.getElementById('postDescHi').value = item.desc_hi; document.getElementById('postTargetLink').value = item.targetLink || ""; document.getElementById('postImageUrl').value = item.imageUrl || ""; document.getElementById('postKeywords').value = item.keywords || ""; document.getElementById('postFormTitle').innerText = "Modify Record"; document.getElementById('postSubmitBtn').innerText = "Apply Updates"; document.getElementById('postCancelBtn').style.display = "block"; }
+        function initiateEditBanner(id) { const item = storeBanners.find(x => x._id === id); document.getElementById('bannerEditId').value = item._id; document.getElementById('bTitleEn').value = item.title_en; document.getElementById('bTitleHi').value = item.title_hi; document.getElementById('bDescEn').value = item.desc_en; document.getElementById('bDescHi').value = item.desc_hi; document.getElementById('bTargetLink').value = item.targetLink; document.getElementById('bImageUrl').value = item.imageUrl || ""; document.getElementById('bannerFormTitle').innerText = "Modify Slide"; document.getElementById('bannerSubmitBtn').innerText = "Apply Updates"; document.getElementById('bannerCancelBtn').style.display = "block"; }
+        function initiateEditHv(id) { const item = storeHv.find(x => x._id === id); document.getElementById('hvEditId').value = item._id; document.getElementById('hvTextEn').value = item.text_en; document.getElementById('hvTextHi').value = item.text_hi; document.getElementById('hvTargetLink').value = item.targetLink; document.getElementById('hvFormTitle').innerText = "Modify Alert"; document.getElementById('hvSubmitBtn').innerText = "Apply Updates"; document.getElementById('hvCancelBtn').style.display = "block"; }
+
+        function resetPostForm() { document.getElementById('postForm').reset(); document.getElementById('postEditId').value=""; document.getElementById('postFormTitle').innerText="Create Dynamic Post"; document.getElementById('postCancelBtn').style.display="none"; }
+        function resetBannerForm() { document.getElementById('bannerForm').reset(); document.getElementById('bannerEditId').value=""; document.getElementById('bannerFormTitle').innerText="Create Showcase Banner Slide"; document.getElementById('bannerCancelBtn').style.display="none"; }
+        function resetHvForm() { document.getElementById('hvForm').reset(); document.getElementById('hvEditId').value=""; document.getElementById('hvFormTitle').innerText="Add Hot Alert Item"; document.getElementById('hvCancelBtn').style.display="none"; }
+        async function deleteTargetItem(apiEndpoint, id) { if(!confirm("Delete profile permanently?")) return; const res = await fetch(`${apiEndpoint}${id}`, { method: 'DELETE' }); if(res.ok) { alert("Cleared."); syncAllCollections(); } }
+    </script>
+</body>
+</html>

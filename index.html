@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GovUpdates | Ultimate Live Dynamic Portal</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <div class="ticker-wrap">
+        <div class="ticker-title">HOT VACANCIES 🔥</div>
+        <div class="ticker" id="scrollingTicker">
+            <span class="ticker-item">No alerts active right now...</span>
+        </div>
+    </div>
+
+    <header class="main-header">
+        <div class="header-container">
+            <div class="logo" onclick="filterCategory('all')">GOV<span>UPDATES</span></div>
+            <div class="search-bar">
+                <input type="text" id="searchInput" placeholder="Search Jobs, Exams, Books...">
+                <button type="button" id="searchBtn">Search</button>
+            </div>
+            <div class="nav-actions">
+                <nav class="desktop-nav">
+                    <button class="nav-link-btn" onclick="filterCategory('Jobs')">Jobs</button>
+                    <button class="nav-link-btn" onclick="filterCategory('E-Notes')">E-Notes</button>
+                    <button class="nav-link-btn" onclick="filterCategory('Books')">Books</button>
+                </nav>
+                <div class="dropdown">
+                    <button class="three-dots" id="menuBtn">&#8942;</button>
+                    <div class="dropdown-content" id="langDropdown">
+                        <button onclick="changeLanguage('en')">English</button>
+                        <button onclick="changeLanguage('hi')">हिन्दी</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="slider-wrapper">
+        <div class="slider-container" id="bannerSliderContainer">
+            <div class="slide-item active">
+                <div class="slide-content">
+                    <h2>Welcome to GovUpdates Portal</h2>
+                    <p>Track dynamic national dashboard modifications, updates, and core assets live.</p>
+                </div>
+            </div>
+        </div>
+        <button class="slider-nav prev" onclick="moveSlide(-1)">&#10094;</button>
+        <button class="slider-nav next" onclick="moveSlide(1)">&#10095;</button>
+    </div>
+
+    <main class="container">
+        <div class="quick-category-bar">
+            <button class="cat-btn active" id="btn-all" onclick="filterCategory('all')">All Updates</button>
+            <button class="cat-btn" id="btn-jobs" onclick="filterCategory('Jobs')">Latest Jobs</button>
+            <button class="cat-btn" id="btn-notes" onclick="filterCategory('E-Notes')">Free E-Notes</button>
+            <button class="cat-btn" id="btn-books" onclick="filterCategory('Books')">Exam Books</button>
+        </div>
+        <h2 id="sectionTitle">Latest Live Updates</h2>
+        <div class="card-grid" id="mainDisplayGrid"></div>
+    </main>
+
+    <script src="js/app.js"></script>
+</body>
+</html>
