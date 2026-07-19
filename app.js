@@ -1,4 +1,3 @@
-// public/js/app.js
 let globalDatabase = [];
 let globalBanners = [];
 let globalLanguage = 'en';
@@ -7,7 +6,6 @@ let currentSlideIndex = 0;
 
 async function bootstrapPortalData() {
     try {
-        // Parallel data streaming fetch requests
         const [postsRes, bannersRes, tickerRes] = await Promise.all([
             fetch('/api/posts'), fetch('/api/banners'), fetch('/api/hotvacancies')
         ]);
@@ -24,6 +22,7 @@ async function bootstrapPortalData() {
 
 function renderTicker(data) {
     const el = document.getElementById('scrollingTicker');
+    if(!el) return;
     if(data.length === 0) {
         el.innerHTML = `<span class="ticker-item">No dynamic vacancy alerts configured.</span>`;
         return;
@@ -37,6 +36,7 @@ function renderTicker(data) {
 
 function renderBanners(data) {
     const container = document.getElementById('bannerSliderContainer');
+    if(!container) return;
     if(data.length === 0) {
         container.innerHTML = `
             <div class="slide-item active" style="background-image: url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1200')">
@@ -73,14 +73,14 @@ function moveSlide(direction) {
 
 function updateSliderUI() {
     const container = document.getElementById('bannerSliderContainer');
-    container.style.transform = `translateX(-${currentSlideIndex * 100}%)`;
+    if(container) container.style.transform = `translateX(-${currentSlideIndex * 100}%)`;
 }
 
-// Automatic structural banner movement intervals
 setInterval(() => moveSlide(1), 6000);
 
 function displayPortalData(dataArray) {
     const grid = document.getElementById('mainDisplayGrid');
+    if(!grid) return;
     grid.innerHTML = "";
     
     let filtered = currentActiveCategory === 'all' ? dataArray : dataArray.filter(i => i.type === currentActiveCategory);
@@ -101,7 +101,6 @@ function displayPortalData(dataArray) {
             
         const btnClass = item.type === 'Jobs' ? 'apply-btn' : 'download-btn';
         
-        // Agar dynamic path missing hai, to background matching icons check
         const finalThumb = item.imageUrl || (item.type === 'Jobs' ? 'https://images.unsplash.com/photo-1521791136368-1a9b7d89136d?w=150' : 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=150');
         const finalLink = item.pdfUrl || item.targetLink || '#';
 
@@ -129,19 +128,26 @@ function displayPortalData(dataArray) {
 function filterCategory(cat) {
     currentActiveCategory = cat;
     document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
-    document.getElementById(`btn-${cat==='E-Notes'?'notes':cat==='Books'?'books':cat==='Jobs'?'jobs':'all'}`).classList.add('active');
+    const targetedBtn = document.getElementById(`btn-${cat==='E-Notes'?'notes':cat==='Books'?'books':cat==='Jobs'?'jobs':'all'}`);
+    if(targetedBtn) targetedBtn.classList.add('active');
     displayPortalData(globalDatabase);
 }
 
-document.getElementById('menuBtn').addEventListener('click', (e) => {
-    document.getElementById('langDropdown').classList.toggle('show');
-    e.stopPropagation();
+const menuBtn = document.getElementById('menuBtn');
+if(menuBtn) {
+    menuBtn.addEventListener('click', (e) => {
+        document.getElementById('langDropdown').classList.toggle('show');
+        e.stopPropagation();
+    });
+}
+window.addEventListener('click', () => {
+    const drop = document.getElementById('langDropdown');
+    if(drop) drop.classList.remove('show');
 });
-window.addEventListener('click', () => document.getElementById('langDropdown').classList.remove('show'));
 
 function changeLanguage(lang) {
     globalLanguage = lang;
     bootstrapPortalData();
 }
 
-bootstrapPortalData();
+document.addEventListener('DOMContentLoaded', bootstrapPortalData);
