@@ -205,7 +205,7 @@ app.put('/api/hotvacancies/:id', async (req, res) => { await HotVacancy.findById
 app.delete('/api/hotvacancies/:id', async (req, res) => { await HotVacancy.findByIdAndDelete(req.params.id); res.json({ success: true }); });
 
 // Catch-All Static View Mapping
-app.get('*', (req, res) => {
+app.get('/:splat*', (req, res) => {
     if (!req.path.startsWith('/api')) {
         res.sendFile(path.join(__dirname, 'index.html'));
     }
