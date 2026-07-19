@@ -1,27 +1,24 @@
 
 // Post Form Handler
-document.getElementById('postForm').addEventListener('submit', async (e) => {
+document.getElementById('loginForm').addEventListener('submit', async (e) => {
     e.preventDefault();
+    const password = document.getElementById('adminPassword').value;
     
-    // FormData se data uthayein (isme text fields aur file dono aa jayenge)
-    const formData = new FormData(e.target);
-    const id = document.getElementById('postEditId').value;
-
     try {
-        const response = await fetch(id ? `/api/posts/${id}` : '/api/posts', {
-            method: id ? 'PUT' : 'POST',
-            body: formData // FormData khud hi header set kar leta hai, alag se 'Content-Type' dene ki zaroorat nahi
+        const response = await fetch('/api/auth/step1', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ password })
         });
 
         if (response.ok) {
-            alert('🎉 Status: Success! Asset has been injected.');
-            resetPostForm();
-            syncAllCollections(); // Ye function aapki admin.html mein already hai
+            alert('OTP dispatched to your email!');
+            // Yahan Step 2 (OTP verification) ka box dikhayein
         } else {
-            alert('Server insertion failure.');
+            alert('Invalid Password');
         }
     } catch (err) {
-        console.error("Transmission breakdown:", err);
+        console.error("Auth error:", err);
     }
 });
 
