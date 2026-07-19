@@ -63,9 +63,12 @@ const Admin = mongoose.model('Admin', new mongoose.Schema({
 // Nodemailer Config: Strictly reading from system environment variables
 const transporter = nodemailer.createTransport({
     service: 'gmail',
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true, // Render पर इसे true होना ज़रूरी है
     auth: {
-        user: process.env.EMAIL_USER, 
-        pass: process.env.EMAIL_PASS  
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
     }
 });
 
