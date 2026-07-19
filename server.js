@@ -49,27 +49,41 @@ const HotVacancy = mongoose.model('HotVacancy', new mongoose.Schema({
 }, { timestamps: true }));
 
 const Admin = mongoose.model('Admin', new mongoose.Schema({
-    email: { type: String, required: true, default: 'admin@example.com' },
+    email: { type: String, required: true },
     passwordHash: { type: String, required: true },
     currentOtp: { type: String, default: null },
     otpExpiry: { type: Date, default: null }
 }));
 
+// Nodemailer Config: Strictly reading from system environment variables
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-        user: process.env.EMAIL_USER || 'YOUR_GMAIL@gmail.com', 
-        pass: process.env.EMAIL_PASS || 'YOUR_GMAIL_APP_PASSWORD' 
+        user: process.env.EMAIL_USER, 
+        pass: process.env.EMAIL_PASS  
     }
 });
 
+// Verification to check if environment variables are correctly mapped
+console.log("⚡ Mail Engine Status: Checking Credentials...");
+if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+    console.error("❌ CRITICAL ERROR: EMAIL_USER or EMAIL_PASS is completely missing in your .env file!");
+} else {
+    console.log(`✅ Mail Engine Setup Verified for: ${process.env.EMAIL_USER}`);
+}
+
+// Seed Admin: Automatically configures your actual Gmail inside database
 async function seedAdmin() {
-    const count = await Admin.countDocuments();
-    if (count === 0) {
-        const salt = await bcrypt.genSalt(10);
-        const hashed = await bcrypt.hash('9090', salt);
-        await Admin.create({ email: 'admin@example.com', passwordHash: hashed });
-        console.log("🔐 Default Admin Profile Initialized (Pass: 9090)");
+    try {
+        const count = await Admin.countDocuments();
+        if (count === 0 && process.env.EMAIL_USER) {
+            const salt = await bcrypt.genSalt(10);
+            const hashed = await bcrypt.hash('9090', salt);
+            await Admin.create({ email: process.env.EMAIL_USER, passwordHash: hashed });
+            console.log(`🔐 Admin Initialized with Master Key: 9090 for target: ${process.env.EMAIL_USER}`);
+        }
+    } catch (err) {
+        console.error("Error during admin initialization setup:", err);
     }
 }
 seedAdmin();
@@ -79,22 +93,34 @@ app.post('/api/auth/step1', async (req, res) => {
     try {
         const { password } = req.body;
         const admin = await Admin.findOne();
+        
+        if (!admin) {
+            return res.status(404).json({ success: false, message: 'No admin account found. Check database seeding.' });
+        }
+
         const isMatch = await bcrypt.compare(password, admin.passwordHash);
         if (!isMatch) return res.status(401).json({ success: false, message: 'Invalid Admin Key Password' });
 
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
         admin.currentOtp = otp;
-        admin.otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
+        admin.otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes expiry
         await admin.save();
 
-        await transporter.sendMail({
-            from: '"GovPortal Security" <security@govportal.com>',
+        const mailOptions = {
+            from: `"GovPortal Security" <${process.env.EMAIL_USER}>`,
             to: admin.email,
             subject: "🔐 Admin Terminal Verification OTP",
             text: `Your two-step authentication passcode is: ${otp}. Valid for 10 minutes.`
-        });
+        };
+
+        await transporter.sendMail(mailOptions);
+        console.log(`🚀 OTP successfully dispatched to ${admin.email}`);
+        
         res.status(200).json({ success: true, message: 'OTP dispatched to registered Gmail address' });
-    } catch (e) { res.status(500).json({ success: false, error: e.message }); }
+    } catch (e) { 
+        console.error("❌ Nodemailer Failed Route Trigger:", e);
+        res.status(500).json({ success: false, error: e.message }); 
+    }
 });
 
 app.post('/api/auth/step2', async (req, res) => {
@@ -114,13 +140,15 @@ app.post('/api/auth/step2', async (req, res) => {
 app.post('/api/auth/forgot-password', async (req, res) => {
     try {
         const admin = await Admin.findOne();
+        if (!admin) return res.status(404).json({ success: false, message: 'Admin not found.' });
+
         const tempPass = Math.random().toString(36).slice(-8);
         const salt = await bcrypt.genSalt(10);
         admin.passwordHash = await bcrypt.hash(tempPass, salt);
         await admin.save();
 
         await transporter.sendMail({
-            from: '"GovPortal Recovery Engine"',
+            from: `"GovPortal Recovery Engine" <${process.env.EMAIL_USER}>`,
             to: admin.email,
             subject: "⚠️ Access Recovery: Temporary Master Key",
             text: `Your temporary master access key is: ${tempPass}\n\nPlease update it immediately inside the terminal configuration dashboard.`
