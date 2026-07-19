@@ -173,7 +173,7 @@ app.put('/api/hotvacancies/:id', async (req, res) => { await HotVacancy.findById
 app.delete('/api/hotvacancies/:id', async (req, res) => { await HotVacancy.findByIdAndDelete(req.params.id); res.json({ success: true }); });
 
 app.use((req, res, next) => {
-    if (req.method === 'GET' && !req.path.startsWith('/api')) return res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    if (req.method === 'GET' && !req.path.startsWith('/api')) return res.sendFile(path.join(__dirname, 'index.html'));
     next();
 });
 app.listen(PORT, () => console.log(`🚀 Secure Executive Engine Active on Port: ${PORT}`));
