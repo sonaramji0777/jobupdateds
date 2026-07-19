@@ -14,11 +14,16 @@ app.use(express.urlencoded({ extended: true }));
 // Serve all assets from the single root directory
 app.use(express.static(__dirname));
 
-// Database Connection
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/govPortalUltimate';
+// Database Connection Configuration
+const MONGO_URI = process.env.MONGO_URI;
+
+if (!MONGO_URI || MONGO_URI.includes('<db_password>')) {
+    console.error("❌ CRITICAL ERROR: Please configure your actual database password in the .env file!");
+}
+
 mongoose.connect(MONGO_URI)
-    .then(() => console.log('🔥 Secure Data Engine Synced'))
-    .catch(err => console.error(err));
+.then(() => console.log('🔥 Secure Atlas Cloud Data Engine Synced'))
+.catch(err => console.error("❌ MongoDB Atlas Connection Failed:", err));
 
 // Data Models
 const Post = mongoose.model('Post', new mongoose.Schema({ 
