@@ -211,7 +211,9 @@ app.delete('/api/hotvacancies/:id', async (req, res) => { await HotVacancy.findB
 
 // Catch-All Static View Mapping
 app.use((req, res, next) => {
-    if (req.method === 'GET' && !req.path.startsWith('/api')) return res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    if (req.method === 'GET' && !req.path.startsWith('/api') && !req.path.includes('.')) {
+        return res.sendFile(path.join(__dirname, 'index.html'));
+    }
     next();
 });
 
